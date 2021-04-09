@@ -1,10 +1,10 @@
 package com.itmo.java.basics.logic.io;
 
 import com.itmo.java.basics.logic.WritableDatabaseRecord;
-
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 
 /**
  * Записывает данные в БД
@@ -31,6 +31,12 @@ public class DatabaseOutputStream extends DataOutputStream {
      * @throws IOException если запись не удалась
      */
     public int write(WritableDatabaseRecord databaseRecord) throws IOException {
-        return 0;
+        writeInt(databaseRecord.getKeySize());
+        write(databaseRecord.getKey());
+        writeInt(databaseRecord.getValueSize());
+        if (databaseRecord.isValuePresented()) {
+            write(databaseRecord.getValue());
+        }
+        return (int) databaseRecord.size();
     }
 }
