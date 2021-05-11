@@ -2,6 +2,7 @@ package com.itmo.java.basics.logic.impl;
 
 import com.itmo.java.basics.exceptions.DatabaseException;
 import com.itmo.java.basics.index.impl.TableIndex;
+import com.itmo.java.basics.initialization.DatabaseInitializationContext;
 import com.itmo.java.basics.logic.Database;
 import com.itmo.java.basics.logic.Table;
 
@@ -10,13 +11,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 public class DatabaseImpl implements Database {
     private String dbName;
     private Path databaseRoot;
 
-    private HashMap<String, Table> tableHashMap = new HashMap<>();
+    private Map<String, Table> tableHashMap = new HashMap<>();
 
     private DatabaseImpl(String dbName, Path databaseRoot) {
         this.dbName = dbName;
@@ -40,6 +42,16 @@ public class DatabaseImpl implements Database {
         return new DatabaseImpl(dbName, Paths.get(databaseRoot.toString(), dbName));
     }
 
+    public static Database initializeFromContext(DatabaseInitializationContext context) {
+        return new DatabaseImpl(context.getDbName(),context.getDatabasePath(),context.getTables());
+    }
+
+    private DatabaseImpl(String dbName, Path databaseRoot, Map<String, Table> tableHashMap) {
+        this.dbName = dbName;
+        this.databaseRoot = databaseRoot;
+        this.tableHashMap = tableHashMap;
+    }
+
     @Override
     public String getName() {
         return dbName;
@@ -53,7 +65,7 @@ public class DatabaseImpl implements Database {
         if (tableHashMap.containsKey(tableName)) {
             throw new DatabaseException("The table name already exist! in createTableIfNotExists()");
         }
-        tableHashMap.put(tableName, TableImpl.create(tableName, databaseRoot, new TableIndex()));
+        tableHashMap.put(tableName, new CachingTable(TableImpl.create(tableName, databaseRoot, new TableIndex())));
     }
 
     @Override

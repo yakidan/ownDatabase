@@ -2,7 +2,7 @@ package com.itmo.java.basics.logic.impl;
 
 import com.itmo.java.basics.index.impl.SegmentIndex;
 import com.itmo.java.basics.index.impl.SegmentOffsetInfoImpl;
-
+import com.itmo.java.basics.initialization.SegmentInitializationContext;
 import com.itmo.java.basics.logic.Segment;
 import com.itmo.java.basics.exceptions.DatabaseException;
 import com.itmo.java.basics.logic.WritableDatabaseRecord;
@@ -25,12 +25,10 @@ public class SegmentImpl implements Segment {
     private String segmentName;
     private Path path;
     private boolean readOnly = false;
-    //    private DatabaseInputStream databaseInputStream;
-//    private DatabaseOutputStream databaseOutputStream;
     private long size;
 
 
-    static Segment create(String segmentName, Path tableRootPath) throws DatabaseException {
+    public static Segment create(String segmentName, Path tableRootPath) throws DatabaseException {
         if (segmentName == null || tableRootPath == null) {
             throw new DatabaseException("segmentName == null || tableRootPath == null in Segment create()");
         }
@@ -47,9 +45,23 @@ public class SegmentImpl implements Segment {
         return new SegmentImpl(segmentName, path);
     }
 
+    public static Segment initializeFromContext(SegmentInitializationContext context) {
+        return new SegmentImpl(context.getSegmentName(), context.getSegmentPath(), context.getIndex(), context.getCurrentSize());
+    }
+
     private SegmentImpl(String segmentName, Path tableRootPath) {
         this.segmentName = segmentName;
         this.path = tableRootPath;
+    }
+
+    private SegmentImpl(String segmentName, Path tableRootPath, SegmentIndex segmentIndex, long size) {
+        this.segmentName = segmentName;
+        this.path = tableRootPath;
+        this.segmentIndex = segmentIndex;
+        this.size = size;
+        if (size >= MAX_SIZE) {
+            this.readOnly = true;
+        }
     }
 
     static String createSegmentName(String tableName) {

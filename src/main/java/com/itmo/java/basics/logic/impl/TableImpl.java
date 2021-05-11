@@ -5,6 +5,7 @@ import com.itmo.java.basics.index.impl.TableIndex;
 import com.itmo.java.basics.logic.Database;
 import com.itmo.java.basics.logic.Segment;
 import com.itmo.java.basics.logic.Table;
+import com.itmo.java.basics.initialization.TableInitializationContext;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+
 
 public class TableImpl implements Table {
     private String tableName;
@@ -25,7 +27,7 @@ public class TableImpl implements Table {
         this.tableIndex = tableIndex;
     }
 
-    static Table create(String tableName, Path pathToDatabaseRoot, TableIndex tableIndex) throws DatabaseException {
+    public static Table create(String tableName, Path pathToDatabaseRoot, TableIndex tableIndex) throws DatabaseException {
         Path curPathToDatabaseRoot = Paths.get(pathToDatabaseRoot.toString(), tableName);
         if (!pathToDatabaseRoot.toFile().exists()) {
             throw new DatabaseException("The directory already exist in Table Create");
@@ -36,6 +38,18 @@ public class TableImpl implements Table {
 
         return new TableImpl(tableName, curPathToDatabaseRoot, tableIndex);
     }
+
+    public static Table initializeFromContext(TableInitializationContext context) {
+        return new TableImpl(context.getTableName(), context.getTablePath(), context.getTableIndex(), context.getCurrentSegment());
+    }
+
+    private TableImpl(String tableName, Path pathToDatabaseRoot, TableIndex tableIndex, Segment curSegment) {
+        this.tableName = tableName;
+        this.path = pathToDatabaseRoot;
+        this.tableIndex = tableIndex;
+        this.curSegment = curSegment;
+    }
+
 
     @Override
     public String getName() {
@@ -62,7 +76,7 @@ public class TableImpl implements Table {
         var segment = tableIndex.searchForKey(objectKey);
         try {
             if (segment.isPresent()) {
-            return segment.get().read(objectKey);
+                return segment.get().read(objectKey);
             }
             return Optional.empty();
         } catch (IOException e) {
