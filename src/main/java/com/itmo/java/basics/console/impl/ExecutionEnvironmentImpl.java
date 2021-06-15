@@ -12,7 +12,9 @@ import java.util.Optional;
 public class ExecutionEnvironmentImpl implements ExecutionEnvironment {
     private final DatabaseConfig databaseConfig;
 
-    private final Map<String, Optional<Database>> databaseHashMap = new HashMap<>();
+
+    private final Map<String, Optional<Database>> databaseMap = new HashMap<>();
+
 
     public ExecutionEnvironmentImpl(DatabaseConfig config) {
         this.databaseConfig = config;
@@ -20,15 +22,19 @@ public class ExecutionEnvironmentImpl implements ExecutionEnvironment {
 
     @Override
     public Optional<Database> getDatabase(String name) {
-        if (!databaseHashMap.containsKey(name)) {
+
+        if (!databaseMap.containsKey(name)) {
             return Optional.empty();
         }
-        return databaseHashMap.get(name);
+        return databaseMap.get(name);
+
     }
 
     @Override
     public void addDatabase(Database db) {
-        databaseHashMap.put(db.getName(), Optional.of(db));
+
+        databaseMap.put(db.getName(), Optional.of(db));
+
     }
 
     @Override
